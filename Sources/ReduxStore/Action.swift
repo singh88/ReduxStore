@@ -8,26 +8,26 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-protocol Action { }
+public protocol Action { }
 
-protocol ReduxState { }
+public protocol ReduxState { }
 
 /// Used for logging
-protocol Middleware {
+public protocol Middleware {
     associatedtype A
     associatedtype S
     func logAction(_ action: A, currentState: S)
 }
 
-protocol SideEffects { }
+public protocol SideEffects { }
 
-protocol ActionCreator {
+public protocol ActionCreator {
     associatedtype A
     associatedtype S
     mutating func createAction(action: A, currentState: S) -> Observable<A>
 }
 
-protocol Reducer {
+public protocol Reducer {
     associatedtype A
     associatedtype S
     associatedtype SE
@@ -35,7 +35,7 @@ protocol Reducer {
     mutating func onError(error: Error, state: inout S, action: A) -> (S, SE?)
 }
 
-protocol Store: AnyObject {
+public protocol Store: AnyObject {
     associatedtype R
     associatedtype RS
     associatedtype AC
