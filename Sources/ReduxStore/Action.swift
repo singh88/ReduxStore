@@ -35,7 +35,7 @@ public protocol Reducer {
     mutating func onError(error: Error, state: inout S, action: A) -> (S, SE?)
 }
 
-public protocol Store: AnyObject {
+protocol Store: AnyObject {
     associatedtype R
     associatedtype RS
     associatedtype AC

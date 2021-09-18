@@ -9,7 +9,7 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-class DefaultStore<R: Reducer, RS: ReduxState,
+public final class DefaultStore<R: Reducer, RS: ReduxState,
                    AC: ActionCreator, A: Action, M: Middleware>: Store where R.A == A,
                                                                                 AC.A == A,
                                                                                 R.S == RS,
