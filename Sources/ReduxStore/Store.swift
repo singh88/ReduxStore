@@ -20,7 +20,7 @@ public final class DefaultStore<R: Reducer, RS: ReduxState,
     var actionCreator: AC
     var middleWare: M
     var disposeBag = DisposeBag()
-    var state: BehaviorRelay<RS>
+    public var state: BehaviorRelay<RS>
     var sideEffects: BehaviorRelay<R.SE?>
 
     private var lastAction: A?
