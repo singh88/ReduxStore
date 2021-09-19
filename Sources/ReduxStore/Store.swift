@@ -25,7 +25,7 @@ public final class DefaultStore<R: Reducer, RS: ReduxState,
 
     private var lastAction: A?
 
-    init(_ state: RS, _ actionC: AC, reducer: R, middleWare: M) {
+    public init(_ state: RS, _ actionC: AC, reducer: R, middleWare: M) {
         self.actionCreator = actionC
         self.reducer = reducer
         self.middleWare = middleWare
