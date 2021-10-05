@@ -1,6 +1,6 @@
 //
-//  Store.swift
-//  Tests
+//  DefaultStore.swift
+//
 //
 //  Created by Manish Singh on 8/18/21.
 //
@@ -9,7 +9,7 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-public final class DefaultStore<R: Reducer, RS: ReduxState,
+class DefaultStore<R: Reducer, RS: ReduxState,
                    AC: ActionCreator, A: Action, M: Middleware>: Store where R.A == A,
                                                                                 AC.A == A,
                                                                                 R.S == RS,
@@ -20,12 +20,12 @@ public final class DefaultStore<R: Reducer, RS: ReduxState,
     var actionCreator: AC
     var middleWare: M
     var disposeBag = DisposeBag()
-    public var state: BehaviorRelay<RS>
-    public var sideEffects: BehaviorRelay<R.SE?>
+    var state: BehaviorRelay<RS>
+    var sideEffects: BehaviorRelay<R.SE?>
 
-    private var lastAction: A?
+    private var nextAction: A?
 
-    public init(_ state: RS, _ actionC: AC, reducer: R, middleWare: M) {
+    init(_ state: RS, _ actionC: AC, reducer: R, middleWare: M) {
         self.actionCreator = actionC
         self.reducer = reducer
         self.middleWare = middleWare
@@ -43,10 +43,17 @@ public final class DefaultStore<R: Reducer, RS: ReduxState,
     public func dispatchAction(_ action: A) {
         actionCreator.createAction(action: action, currentState: state.value)
             .subscribe(on: MainScheduler.instance)
-            .subscribe (onError: { error in
-                self.onError(error, action: action)
-            }, onCompleted: {
-                self.onComplete(action)
+            .subscribe (
+            onNext: { [weak self] action in
+                self?.nextAction = action
+            }, onError: { [weak self] error in
+                self?.onError(error, action: action)
+            }, onCompleted: { [weak self] in
+                guard let self = self else { return }
+
+                guard let uparapped = self.nextAction
+                else { return self.onComplete(action) }
+                self.onComplete(uparapped)
             }).disposed(by: disposeBag)
     }
 
@@ -56,22 +63,37 @@ public final class DefaultStore<R: Reducer, RS: ReduxState,
         let reducerValues = reducer.onError(error: error,
                                                  state: &currentState,
                                                  action: action)
-        if let unwrappedSideEffects = reducerValues.1 {
-            sideEffects.accept(unwrappedSideEffects)
-        }
-
+        sideEffects.accept(reducerValues.sideEffects)
         state.accept(reducerValues.0)
     }
 
     private func onComplete(_ action: A) {
-        var currentState = state.value
+        var currentState = state.value // old values
         middleWare.logAction(action, currentState: currentState)
-        let reducerValues = self.reducer.createReducer(state: &currentState, action: action)
 
-        if let unwrappedSideEffects = reducerValues.1 {
-            sideEffects.accept(unwrappedSideEffects)
-        }
+        let reducerValues = reducer.createReducer(state: &currentState, action: action)
+        state.accept(reducerValues.newState)
+        sideEffects.accept(reducerValues.sideEffects)
 
-        state.accept(reducerValues.0)
+        // In case of successful events onNext will be called so we need
+        // to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
+        nextAction = nil
     }
 }
+
+protocol Store: AnyObject {
+    associatedtype R
+    associatedtype RS
+    associatedtype AC
+    associatedtype A
+    associatedtype M
+
+    var reducer: R { set get }
+    var state: BehaviorRelay<RS> { set get }
+    var actionCreator: AC { set get }
+
+    func dispatchActions(_ action: Observable<A>)
+    func dispatchAction(_ action: A)
+}
+
+
