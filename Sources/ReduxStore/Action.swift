@@ -11,3 +11,13 @@ import RxCocoa
 public protocol Action { }
 
 public protocol ReduxState { }
+
+protocol HasDisposeBag {
+    var disposeBag: DisposeBag { get }
+}
+
+extension HasDisposeBag {
+    var disposeBag: DisposeBag {
+        return DisposeBag()
+    }
+}
