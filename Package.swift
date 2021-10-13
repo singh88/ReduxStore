@@ -13,8 +13,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/ReactiveX/RxSwift.git", from: "6.2.0"),
-//        .product(name: "RxCocoa", package: "RxSwift")
+        .package(url: "https://github.com/ReactiveX/RxSwift.git", from: "6.2.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -22,9 +21,6 @@ let package = Package(
         .target(
             name: "ReduxStore",
             dependencies: ["RxSwift",
-                           .product(name: "RxCocoa", package: "RxSwift")]),
-        .testTarget(
-            name: "ReduxStoreTests",
-            dependencies: ["ReduxStore"]),
+                           .product(name: "RxCocoa", package: "RxSwift")])
     ]
 )
