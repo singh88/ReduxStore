@@ -31,7 +31,7 @@ public final class DefaultStore<R: Reducer, RS: ReduxState,
     public var _sideEffects: BehaviorRelay<R.SE?>
 
     public var sideEffects: Observable<R.SE?> {
-        return _sideEffects.asObservable()
+        return _sideEffects.asObservable().observe(on: MainScheduler.instance)
     }
 
     private var nextAction: A?
