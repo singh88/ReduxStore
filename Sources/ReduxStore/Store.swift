@@ -22,8 +22,6 @@ public final class DefaultStore<R: Reducer, RS: ReduxState,
     var disposeBag = DisposeBag()
     private var _state: BehaviorRelay<RS>
 
-    public var statet = PublishSubject<RS>()
-
     public var state: Observable<RS> {
         return _state.asObservable()
     }
