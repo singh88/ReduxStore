@@ -11,5 +11,5 @@ import Combine
 public protocol ActionCreatorCombine {
     associatedtype A
     associatedtype S
-    mutating func createAction(action: A, currentState: S) -> AnyPublisher<A, Never>
+    mutating func createAction(action: A, currentState: S) -> AnyPublisher<A, Error>
 }
