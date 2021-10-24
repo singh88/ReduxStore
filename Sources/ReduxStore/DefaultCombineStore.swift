@@ -42,13 +42,13 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
         self._sideEffects = CurrentValueSubject(nil)
     }
 
-    func dispatchActions(_ actions: AnyPublisher<A, Never>) {
+    public func dispatchActions(_ actions: AnyPublisher<A, Never>) {
         actions.sink { [weak self] action in
             self?.dispatchAction(action)
         }.store(in: &cacellableTasks)
     }
 
-    func dispatchAction(_ action: A) {
+    public func dispatchAction(_ action: A) {
         actionCreator
             .createAction(action: action, currentState: _state.value)
             .receive(on: storeQueue)
