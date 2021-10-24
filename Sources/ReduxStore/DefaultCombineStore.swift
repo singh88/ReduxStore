@@ -43,17 +43,16 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
     }
 
     func dispatchActions(_ actions: AnyPublisher<A, Never>) {
-        let cancellableActions = actions.sink { [weak self] action in
+        actions.sink { [weak self] action in
             self?.dispatchAction(action)
-        }
-
-        cacellableTasks = [cancellableActions]
+        }.store(in: &cacellableTasks)
     }
 
     func dispatchAction(_ action: A) {
         actionCreator
             .createAction(action: action, currentState: _state.value)
-            .receive(on: storeQueue).sink { completion in
+            .receive(on: storeQueue)
+            .sink { completion in
                 switch completion {
                     case .failure(let error):
                         print(error)
