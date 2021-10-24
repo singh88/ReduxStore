@@ -1,5 +1,5 @@
 //
-//  DefaultStore.swift
+//  DefaultRxStore.swift
 //
 //
 //  Created by Manish Singh on 8/18/21.
@@ -9,7 +9,7 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-public final class DefaultStore<R: Reducer, RS: ReduxState,
+public final class DefaultRxStore<R: Reducer, RS: ReduxState,
                    AC: ActionCreator, A: Action, M: Middleware> where R.A == A,
                                                                         AC.A == A,
                                                                         R.S == RS,
