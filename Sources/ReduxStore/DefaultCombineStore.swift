@@ -8,13 +8,14 @@ import Foundation
 import Combine
 
 @available(iOS 13.0, *)
+
 public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
-                   AC: ActionCreatorCombine, A: Action, M: Middleware> where R.A == A,
-                                                                        AC.A == A,
-                                                                        R.S == RS,
-                                                                        R.S == AC.S,
-                                                                        M.A == A,
-                                                                        M.S == RS {
+                                       AC: ActionCreatorCombine, A: Action, M: Middleware> where R.A == A,
+                                                                                                 AC.A == A,
+                                                                                                 R.S == RS,
+                                                                                                 R.S == AC.S,
+                                                                                                 M.A == A,
+                                                                                                 M.S == RS {
     var reducer: R
     var actionCreator: AC
     var middleWare: M
@@ -34,6 +35,14 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
         return _state.eraseToAnyPublisher()
     }
 
+    private var _nextAction: A?
+
+    /// Store initializer and that is supposed to happen just once during the lifecycle of this store
+    /// - Parameters:
+    ///   - state: State type
+    ///   - actionC: ActionCreator concrete implemetation
+    ///   - reducer: Reducer concrete implementation
+    ///   - middleWare: Middlerware concrete implementation
     public init(_ state: RS, _ actionC: AC, reducer: R, middleWare: M) {
         self.actionCreator = actionC
         self.reducer = reducer
@@ -42,81 +51,56 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
         self._sideEffects = CurrentValueSubject(nil)
     }
 
+    /// Accpets many actions together in a single stream.
+    /// - Parameter actions:
     public func dispatchActions(_ actions: AnyPublisher<A, Never>) {
-        actions.sink { [weak self] action in
-            self?.dispatchAction(action)
-        }.store(in: &cacellableTasks)
+        actions
+            .sink { [weak self] action in
+                self?.dispatchAction(action)
+            }.store(in: &cacellableTasks)
     }
 
     public func dispatchAction(_ action: A) {
         actionCreator
             .createAction(action: action, currentState: _state.value)
             .receive(on: storeQueue)
-            .sink { completion in
+            .sink { [unowned self] completion in
+                self.middleWare.logAction(action, currentState: self._state.value)
                 switch completion {
                     case .failure(let error):
-                        print(error)
+                        self.onError(error, action: action)
                     case .finished:
-                        print("Success")
+                        self.onComplete(action)
                 }
-            } receiveValue: { updatedAction in
-                print(updatedAction)
+            } receiveValue: { latestAction in
+                self._nextAction = latestAction
             }.store(in: &cacellableTasks)
     }
 
     private func onError(_ error: Error, action: A) {
         var currentState = _state.value
-        middleWare.logAction(action, currentState: currentState)
         let reducerValues = reducer.onError(error: error,
-                                                 state: &currentState,
-                                                 action: action)
-//        _sideEffects.accept(reducerValues.sideEffects)
-//        _state.accept(reducerValues.0)
+                                            state: &currentState,
+                                            action: action)
+        _state.send(reducerValues.newState)
+        _sideEffects.send(reducerValues.sideEffects)
     }
 
     private func onComplete(_ action: A) {
-        var currentState = _state.value // old values
-        middleWare.logAction(action, currentState: currentState)
-
+        var currentState = _state.value
         let reducerValues = reducer.createReducer(state: &currentState, action: action)
-//        _state.accept(reducerValues.newState)
-//        _sideEffects.accept(reducerValues.sideEffects)
-//        guard let nextAction = nextAction else {
-//            return
-//        }
-//
-//        // In case of successful events onNext will be called so we need
-//        // to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
-//        self.nextAction = nil
-//        dispatchAction(nextAction)
-    }
-//        actionCreator
-//            .createAction(action: action, currentState: _state.value)
-//            .observe(on: scheduler)
-//            .subscribe (
-//            onNext: { [weak self] action in
-//                self?.nextAction = action
-//            }, onError: { [weak self] error in
-//                self?.onError(error, action: action)
-//            }, onCompleted: { [weak self] in
-//                self?.onComplete(action)
-//            }).disposed(by: disposeBag)
-    }
+        _state.send(reducerValues.newState)
+        _sideEffects.send(reducerValues.sideEffects)
 
-    /*
-     var reducer: R
-     var actionCreator: AC
-     var middleWare: M
-     var disposeBag = DisposeBag()
-     private var _state: BehaviorRelay<RS>
-     /// support RxSwift observer type.
-     public var state: Observable<RS> {
-         return _state.asObservable()
-     }
-     public var _sideEffects: BehaviorRelay<R.SE?>
-     /// support RxSwift observer type.
-     public var sideEffects: Observable<R.SE?> {
-         return _sideEffects.asObservable().observe(on: MainScheduler.instance)
-     }
-     */
-//}
+        guard let nextAction = _nextAction else {
+            return
+        }
+        /*
+         In case of successful events onNext will be called so we need
+         to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
+         */
+        self._nextAction = nil
+        dispatchAction(nextAction)
+    }
+}
+
