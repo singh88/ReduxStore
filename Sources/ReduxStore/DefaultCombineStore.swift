@@ -23,7 +23,6 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
     private let storeQueue =  DispatchQueue(label: "StoreQueueCombine")
 
     private var cacellableTasks: Set<AnyCancellable> = []
-
     private(set) var _state: CurrentValueSubject<RS, Never>
     private(set) var _sideEffects: CurrentValueSubject<R.SE?, Never>
 
