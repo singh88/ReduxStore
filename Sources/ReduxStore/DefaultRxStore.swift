@@ -34,7 +34,9 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
 
     private var nextAction: A?
 
-    private let scheduler = SerialDispatchQueueScheduler(internalSerialQueueName: "StoreQueue")
+    private let scheduler = DispatchQueue(label: "SerialStoreQueue")
+
+    private let sch = ConcurrentDispatchQueueScheduler(queue: DispatchQueue.global())
 
     public init(_ state: RS, _ actionC: AC, reducer: R, middleWare: M) {
         self.actionCreator = actionC
@@ -51,13 +53,19 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
             }).disposed(by: disposeBag)
     }
 
+    fileprivate func updateCurrentAction(_ action: A) {
+        scheduler.sync {
+            nextAction = action
+        }
+    }
+
     public func dispatchAction(_ action: A) {
         actionCreator
             .createAction(action: action, currentState: _state.value)
-            .observe(on: scheduler)
+            .observe(on: sch)
             .subscribe (
             onNext: { [weak self] action in
-                self?.nextAction = action
+                self?.updateCurrentAction(action)
             }, onError: { [weak self] error in
                 self?.onError(error, action: action)
             }, onCompleted: { [weak self] in
@@ -65,9 +73,22 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
             }).disposed(by: disposeBag)
     }
 
+    fileprivate func getCurrentStateValue() -> RS {
+        scheduler.sync {
+            return _state.value
+        }
+    }
+
+    fileprivate func triggerMiddleWareCall(_ action: A, _ currentState: RS) {
+        scheduler.sync {
+            middleWare.logAction(action, currentState: currentState)
+        }
+    }
+
     private func onError(_ error: Error, action: A) {
-        var currentState = _state.value
-        middleWare.logAction(action, currentState: currentState)
+        var currentState = getCurrentStateValue()
+        triggerMiddleWareCall(action, currentState)
+        
         let reducerValues = reducer.onError(error: error,
                                                  state: &currentState,
                                                  action: action)
@@ -76,8 +97,8 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
     }
 
     private func onComplete(_ action: A) {
-        var currentState = _state.value // old values
-        middleWare.logAction(action, currentState: currentState)
+        var currentState = getCurrentStateValue() // old values
+        triggerMiddleWareCall(action, currentState)
 
         let reducerValues = reducer.createReducer(state: &currentState, action: action)
         _state.accept(reducerValues.newState)
