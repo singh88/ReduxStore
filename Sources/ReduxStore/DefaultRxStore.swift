@@ -56,7 +56,7 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
     public func dispatchAction(_ action: A) {
         actionCreator
             .createAction(action: action, currentState: _state.value)
-            .subscribe(on: sch)
+//            .subscribe(on: sch)
         //(on: scheduler)
             .subscribe (
             onNext: { [weak self] action in
