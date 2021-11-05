@@ -34,7 +34,7 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
 
     private var nextAction: A?
 
-    private let scheduler = SerialDispatchQueueScheduler(internalSerialQueueName: "StoreQueue")
+    private let queue = DispatchQueue(label: "store queue")
 
     private let sch = ConcurrentDispatchQueueScheduler(qos: .default)
 
@@ -53,11 +53,15 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
             }).disposed(by: disposeBag)
     }
 
+    fileprivate func getCurrentState() -> RS {
+        queue.async {
+            return _state.value
+        }
+    }
+
     public func dispatchAction(_ action: A) {
         actionCreator
-            .createAction(action: action, currentState: _state.value)
-//            .subscribe(on: sch)
-        //(on: scheduler)
+            .createAction(action: action, currentState: getCurrentState())
             .subscribe (
             onNext: { [weak self] action in
                 self?.nextAction = action
@@ -69,22 +73,27 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
     }
 
     private func onError(_ error: Error, action: A) {
-        var currentState = _state.value
-        middleWare.logAction(action, currentState: currentState)
-        let reducerValues = reducer.onError(error: error,
-                                                 state: &currentState,
-                                                 action: action)
-        _sideEffects.accept(reducerValues.sideEffects)
-        _state.accept(reducerValues.0)
+        var currentState = getCurrentState()
+        queue.sync {
+            middleWare.logAction(action, currentState: currentState)
+            let reducerValues = reducer.onError(error: error,
+                                                     state: &currentState,
+                                                     action: action)
+            _sideEffects.accept(reducerValues.sideEffects)
+            _state.accept(reducerValues.0)
+        }
+
     }
 
     private func onComplete(_ action: A) {
-        var currentState = _state.value // old values
-        middleWare.logAction(action, currentState: currentState)
+        var currentState = getCurrentState() // old values
+        queue.sync {
+            middleWare.logAction(action, currentState: currentState)
 
-        let reducerValues = reducer.createReducer(state: &currentState, action: action)
-        _state.accept(reducerValues.newState)
-        _sideEffects.accept(reducerValues.sideEffects)
+            let reducerValues = reducer.createReducer(state: &currentState, action: action)
+            _state.accept(reducerValues.newState)
+            _sideEffects.accept(reducerValues.sideEffects)
+        }
 
         guard let nextAction = nextAction else {
             return
