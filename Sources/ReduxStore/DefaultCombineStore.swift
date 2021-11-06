@@ -65,24 +65,10 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
             .receive(on: storeQueue)
             .sink { [unowned self] completion in
                 self.middleWare.logAction(action, currentState: self._state.value)
-                switch completion {
-                    case .failure(let error):
-                        self.onError(error, action: action)
-                    case .finished:
-                        self.onComplete(action)
-                }
+                self.onComplete(action)
             } receiveValue: { latestAction in
                 self._nextAction = latestAction
             }.store(in: &cacellableTasks)
-    }
-
-    private func onError(_ error: Error, action: A) {
-        var currentState = _state.value
-        let reducerValues = reducer.onError(error: error,
-                                            state: &currentState,
-                                            action: action)
-        _state.send(currentState)
-        _sideEffects.send(reducerValues)
     }
 
     private func onComplete(_ action: A) {
