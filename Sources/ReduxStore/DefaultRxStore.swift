@@ -54,9 +54,9 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
     }
 
     fileprivate func getCurrentState() -> RS {
-        queue.async {
+        //queue.async {
             return _state.value
-        }
+       // }
     }
 
     public func dispatchAction(_ action: A) {
@@ -74,26 +74,27 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
 
     private func onError(_ error: Error, action: A) {
         var currentState = getCurrentState()
-        queue.sync {
+       // queue.sync {
             middleWare.logAction(action, currentState: currentState)
             let reducerValues = reducer.onError(error: error,
                                                      state: &currentState,
                                                      action: action)
-            _sideEffects.accept(reducerValues.sideEffects)
-            _state.accept(reducerValues.0)
-        }
+            _sideEffects.accept(reducerValues)
+            _state.accept(currentState)
+      //  }
 
     }
 
     private func onComplete(_ action: A) {
         var currentState = getCurrentState() // old values
-        queue.sync {
+
+        //queue.sync {
             middleWare.logAction(action, currentState: currentState)
 
             let reducerValues = reducer.createReducer(state: &currentState, action: action)
-            _state.accept(reducerValues.newState)
-            _sideEffects.accept(reducerValues.sideEffects)
-        }
+            _state.accept(currentState)
+            _sideEffects.accept(reducerValues)
+      //  }
 
         guard let nextAction = nextAction else {
             return
