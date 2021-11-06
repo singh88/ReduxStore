@@ -54,9 +54,7 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
     }
 
     fileprivate func getCurrentState() -> RS {
-        //queue.async {
-            return _state.value
-       // }
+        return _state.value
     }
 
     public func dispatchAction(_ action: A) {
@@ -65,36 +63,22 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
             .subscribe (
             onNext: { [weak self] action in
                 self?.nextAction = action
-            }, onError: { [weak self] error in
-                self?.onError(error, action: action)
             }, onCompleted: { [weak self] in
                 self?.onComplete(action)
             }).disposed(by: disposeBag)
     }
 
-    private func onError(_ error: Error, action: A) {
-        var currentState = getCurrentState()
-       // queue.sync {
-            middleWare.logAction(action, currentState: currentState)
-            let reducerValues = reducer.onError(error: error,
-                                                     state: &currentState,
-                                                     action: action)
-            _sideEffects.accept(reducerValues)
-            _state.accept(currentState)
-      //  }
-
-    }
-
+    /// This function will be called on every complete call from action creator.
+    /// The two main calls that this function is responsible for
+    /// are calling the reducer and calling the next action if any.
+    /// - Parameter action: <#action description#>
     private func onComplete(_ action: A) {
         var currentState = getCurrentState() // old values
+        middleWare.logAction(action, currentState: currentState)
 
-        //queue.sync {
-            middleWare.logAction(action, currentState: currentState)
-
-            let reducerValues = reducer.createReducer(state: &currentState, action: action)
-            _state.accept(currentState)
-            _sideEffects.accept(reducerValues)
-      //  }
+        let reducerValues = reducer.createReducer(state: &currentState, action: action)
+        _state.accept(currentState)
+        _sideEffects.accept(reducerValues)
 
         guard let nextAction = nextAction else {
             return
