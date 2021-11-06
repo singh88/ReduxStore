@@ -81,15 +81,15 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
         let reducerValues = reducer.onError(error: error,
                                             state: &currentState,
                                             action: action)
-        _state.send(reducerValues.newState)
-        _sideEffects.send(reducerValues.sideEffects)
+        _state.send(currentState)
+        _sideEffects.send(reducerValues)
     }
 
     private func onComplete(_ action: A) {
         var currentState = _state.value
         let reducerValues = reducer.createReducer(state: &currentState, action: action)
-        _state.send(reducerValues.newState)
-        _sideEffects.send(reducerValues.sideEffects)
+        _state.send(currentState)
+        _sideEffects.send(reducerValues)
 
         guard let nextAction = _nextAction else {
             return
