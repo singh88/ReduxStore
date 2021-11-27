@@ -9,6 +9,8 @@ import Foundation
 import RxSwift
 import RxCocoa
 
+// References: https://github.com/pointfreeco/swift-composable-architecture
+
 public final class DefaultRxStore<R: Reducer, RS: ReduxState,
                    AC: ActionCreator, A: Action, M: Middleware> where R.A == A,
                                                                         AC.A == A,
@@ -32,7 +34,7 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
         return _sideEffects.asObservable().observe(on: MainScheduler.instance)
     }
 
-    private var nextAction: A?
+    private var nextAction: [A?]
 
     private let queue = DispatchQueue(label: "store queue")
 
@@ -62,7 +64,7 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
             .createAction(action: action, currentState: getCurrentState())
             .subscribe (
             onNext: { [weak self] action in
-                self?.nextAction = action
+                self?.nextAction.insert(action, at: 0)
             }, onCompleted: { [weak self] in
                 self?.onComplete(action)
             }).disposed(by: disposeBag)
@@ -80,14 +82,18 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
         _state.accept(currentState)
         _sideEffects.accept(reducerValues)
 
-        guard let nextAction = nextAction else {
-            return
-        }
+        while !nextAction.isEmpty {
+            guard let nextAction = nextAction.popLast(),
+                    let unwrappedNextAction = nextAction
+            else {
+                return
+            }
 
-        // In case of successful events onNext will be called so we need
-        // to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
-        self.nextAction = nil
-        dispatchAction(nextAction)
+            // In case of successful events onNext will be called so we need
+            // to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
+//            self.nextAction = nil
+            dispatchAction(unwrappedNextAction)
+        }
     }
 }
 
