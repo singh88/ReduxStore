@@ -34,7 +34,7 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
         return _sideEffects.asObservable().observe(on: MainScheduler.instance)
     }
 
-    private var nextAction: [A?]
+    private var nextAction = [A?]()
 
     private let queue = DispatchQueue(label: "store queue")
 
