@@ -14,8 +14,8 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/ReactiveX/RxSwift.git", from: "6.0.0"),
-        .package(url: "https://github.com/RxSwiftCommunity/RxDataSources.git", from: "5.0.0"),
-        .package(url: "https://github.com/CombineCommunity/RxCombine.git", from: "2.0.0")
+        .package(url: "https://github.com/RxSwiftCommunity/RxDataSources.git", from: "5.0.0")
+//        .package(url: "https://github.com/CombineCommunity/RxCombine.git", from: "2.0.0")
 
     ],
     targets: [
@@ -25,6 +25,6 @@ let package = Package(
             name: "ReduxStore",
             dependencies: ["RxSwift",
                            .product(name: "RxCocoa", package: "RxSwift"),
-                           "RxCombine", "RxDataSources"])
+    "RxDataSources"])
     ]
 )
