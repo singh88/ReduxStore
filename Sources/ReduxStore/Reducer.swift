@@ -9,7 +9,6 @@ public protocol Reducer {
     associatedtype A
     associatedtype S
     associatedtype SE
-    typealias ReducerOutput = (newState: S, sideEffects: SE?)
+    typealias ReducerOutput = SE?
     mutating func createReducer(state: inout S, action: A) -> ReducerOutput
-    mutating func onError(error: Error, state: inout S, action: A) -> ReducerOutput
 }

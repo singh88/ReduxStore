@@ -1,5 +1,5 @@
 //
-//  DefaultStore.swift
+//  DefaultRxStore.swift
 //
 //
 //  Created by Manish Singh on 8/18/21.
@@ -9,7 +9,9 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-public final class DefaultStore<R: Reducer, RS: ReduxState,
+// References: https://github.com/pointfreeco/swift-composable-architecture
+
+public final class DefaultRxStore<R: Reducer, RS: ReduxState,
                    AC: ActionCreator, A: Action, M: Middleware> where R.A == A,
                                                                         AC.A == A,
                                                                         R.S == RS,
@@ -32,9 +34,11 @@ public final class DefaultStore<R: Reducer, RS: ReduxState,
         return _sideEffects.asObservable().observe(on: MainScheduler.instance)
     }
 
-    private var nextAction: A?
+    private var nextAction = [A?]()
 
-    private let scheduler = SerialDispatchQueueScheduler(internalSerialQueueName: "StoreQueue")
+    private let queue = DispatchQueue(label: "store queue")
+
+    private let sch = ConcurrentDispatchQueueScheduler(qos: .default)
 
     public init(_ state: RS, _ actionC: AC, reducer: R, middleWare: M) {
         self.actionCreator = actionC
@@ -51,46 +55,45 @@ public final class DefaultStore<R: Reducer, RS: ReduxState,
             }).disposed(by: disposeBag)
     }
 
+    fileprivate func getCurrentState() -> RS {
+        return _state.value
+    }
+
     public func dispatchAction(_ action: A) {
         actionCreator
-            .createAction(action: action, currentState: _state.value)
-            .observe(on: scheduler)
+            .createAction(action: action, currentState: getCurrentState())
             .subscribe (
             onNext: { [weak self] action in
-                self?.nextAction = action
-            }, onError: { [weak self] error in
-                self?.onError(error, action: action)
+                self?.nextAction.insert(action, at: 0)
             }, onCompleted: { [weak self] in
                 self?.onComplete(action)
             }).disposed(by: disposeBag)
     }
 
-    private func onError(_ error: Error, action: A) {
-        var currentState = _state.value
-        middleWare.logAction(action, currentState: currentState)
-        let reducerValues = reducer.onError(error: error,
-                                                 state: &currentState,
-                                                 action: action)
-        _sideEffects.accept(reducerValues.sideEffects)
-        _state.accept(reducerValues.0)
-    }
-
+    /// This function will be called on every complete call from action creator.
+    /// The two main calls that this function is responsible for
+    /// are calling the reducer and calling the next action if any.
+    /// - Parameter action: <#action description#>
     private func onComplete(_ action: A) {
-        var currentState = _state.value // old values
+        var currentState = getCurrentState() // old values
         middleWare.logAction(action, currentState: currentState)
 
         let reducerValues = reducer.createReducer(state: &currentState, action: action)
-        _state.accept(reducerValues.newState)
-        _sideEffects.accept(reducerValues.sideEffects)
+        _state.accept(currentState)
+        _sideEffects.accept(reducerValues)
 
-        guard let nextAction = nextAction else {
-            return
+        while !nextAction.isEmpty {
+            guard let nextAction = nextAction.popLast(),
+                    let unwrappedNextAction = nextAction
+            else {
+                return
+            }
+
+            // In case of successful events onNext will be called so we need
+            // to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
+//            self.nextAction = nil
+            dispatchAction(unwrappedNextAction)
         }
-
-        // In case of successful events onNext will be called so we need
-        // to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
-        self.nextAction = nil
-        dispatchAction(nextAction)
     }
 }
 
