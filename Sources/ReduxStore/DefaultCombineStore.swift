@@ -27,7 +27,7 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
     private(set) var _sideEffects: CurrentValueSubject<R.SE?, Never>
 
     public var sideEffects: AnyPublisher<R.SE?, Never> {
-        return _sideEffects.receive(on: DispatchQueue.main).eraseToAnyPublisher()
+        return _sideEffects.subscribe(on: DispatchQueue.main).eraseToAnyPublisher()
     }
 
     public var state: AnyPublisher<RS, Never> {
