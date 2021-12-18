@@ -19,6 +19,6 @@ let package = Package(
     targets: [
         .target(
             name: "ReduxStore",
-            dependencies: ["RxSwift", .product(name: "RxCocoa", package: "RxSwift")])
+            dependencies: ["RxSwift", .product(name: "RxCocoa", package: "RxSwift"), "RxDataSources"])
     ]
 )
