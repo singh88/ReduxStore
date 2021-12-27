@@ -60,7 +60,7 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
     }
 
     public func dispatchAction(_ action: A) {
-        printAllNextEvents()
+        //printAllNextEvents()
         actionCreator
             .createAction(action: action, currentState: getCurrentState())
             .subscribe (
@@ -82,6 +82,8 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
     /// are calling the reducer and calling the next action if any.
     /// - Parameter action: <#action description#>
     private func onComplete(_ action: A) {
+        printAllNextEvents()
+
         var currentState = getCurrentState() // old values
         middleWare.logAction(action, currentState: currentState)
 
@@ -95,6 +97,8 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
             else {
                 return
             }
+
+            print("popped action is \(unwrappedNextAction)")
 
             // In case of successful events onNext will be called so we need
             // to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
