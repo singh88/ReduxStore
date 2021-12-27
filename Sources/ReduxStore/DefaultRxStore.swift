@@ -60,6 +60,7 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
     }
 
     public func dispatchAction(_ action: A) {
+        printAllNextEvents()
         actionCreator
             .createAction(action: action, currentState: getCurrentState())
             .subscribe (
@@ -68,6 +69,12 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
             }, onCompleted: { [weak self] in
                 self?.onComplete(action)
             }).disposed(by: disposeBag)
+    }
+
+    func printAllNextEvents() {
+        nextAction.forEach {
+            print("currently \($0) is in queue")
+        }
     }
 
     /// This function will be called on every complete call from action creator.
