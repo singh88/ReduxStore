@@ -65,7 +65,7 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
             .createAction(action: action, currentState: getCurrentState())
             .subscribe (
             onNext: { [weak self] action in
-                self?.nextAction.insert(action, at: 0)
+                self?.nextAction.append(action)
             }, onCompleted: { [weak self] in
                 self?.onComplete(action)
             }).disposed(by: disposeBag)
