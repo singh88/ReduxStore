@@ -1,9 +1,9 @@
 # ReduxStore
 
-This repo is developed after looking into so many inspiring implementations of Redux architecture in Swift. 
+This repo implements Redux architecture in Swift to enable RxSwift and Combine based applications to leverage unidirectional data flow. 
 
 ### Why
-Redux talks about a single source of truth for state managment and unidirectional dataflow. 
+Redux talks about a single source of truth for state managment to avoid to many floating variable and boolean flags in various view model and view controllers. 
 
 ### Components
 * State
