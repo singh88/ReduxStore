@@ -1,4 +1,4 @@
-# ReduxStore
+# ReduxSwift
 
 This repo implements Redux architecture in Swift to enable RxSwift and Combine based applications to leverage unidirectional data flow. 
 
