@@ -10,3 +10,5 @@ Redux talks about a single source of truth for state managment to avoid to many 
 * Action
 * ActionCreator
 * Reducer
+
+### WIP
