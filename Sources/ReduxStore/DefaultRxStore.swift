@@ -36,10 +36,6 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
 
     private var nextAction = [A?]()
 
-    private let queue = DispatchQueue(label: "store queue")
-
-    private let sch = ConcurrentDispatchQueueScheduler(qos: .default)
-
     public init(_ state: RS, _ actionC: AC, reducer: R, middleWare: M) {
         self.actionCreator = actionC
         self.reducer = reducer
@@ -59,8 +55,15 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
         return _state.value
     }
 
+    ///  All the dispatchedActions from ActionCreator are supposed to come from the main thread
+    ///  and this is done to avoid queue hopping. We have tried to add storequeue but in case of sync and asycn function
+    ///  calls behavior causes various issues on UI. For instance, if action creator returns an empty observable
+    ///  then call returns to this function on the main queue and if store is using a separate dedicated queue
+    ///  to do things in onNext and onComplete then it will cause thread queue hopping which will create patchy UX.
+    ///  Better approach could have been to take the responsibility to move the responsibilty from the caller to store to do that decisioning
+    ///  but it comes with a cost of hopping. So for now that responsibiblity is with the caller.
+    /// - Parameter action: Generic Action type
     public func dispatchAction(_ action: A) {
-        //printAllNextEvents()
         actionCreator
             .createAction(action: action, currentState: getCurrentState())
             .subscribe (
@@ -73,14 +76,20 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
 
     func printAllNextEvents() {
         nextAction.forEach {
-            print("currently \($0) is in queue")
+            logEvents("currently \($0) is in queue")
         }
+    }
+
+    func logEvents(_ message: String) {
+        #if DEBUG
+            print("calling \(message)")
+        #endif
     }
 
     /// This function will be called on every complete call from action creator.
     /// The two main calls that this function is responsible for
     /// are calling the reducer and calling the next action if any.
-    /// - Parameter action: <#action description#>
+    /// - Parameter action: Generic Action type
     private func onComplete(_ action: A) {
         printAllNextEvents()
 
