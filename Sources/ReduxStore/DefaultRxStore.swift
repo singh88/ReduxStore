@@ -110,7 +110,7 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
             logEvents("popped action is \(unwrappedNextAction)")
 
             // In case of successful events onNext will be called so we need
-            // to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
+            // to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.Missing required module 'RxCocoaRuntime'
             dispatchAction(unwrappedNextAction)
         }
     }

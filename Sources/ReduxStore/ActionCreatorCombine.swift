@@ -11,5 +11,6 @@ import Combine
 public protocol ActionCreatorCombine {
     associatedtype A
     associatedtype S
+    @available(macOS 10.15, *)
     mutating func createAction(action: A, currentState: S) -> AnyPublisher<A, Error>
 }
