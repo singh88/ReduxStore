@@ -11,7 +11,7 @@ import Combine
 @available(iOS 13.0, *)
 
 public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
-                                       AC: ActionCreatorCombine, A: Action, M: Middleware> where R.A == A, AC.A == A,  R.S == RS, R.S == AC.S, M.A == A, M.S == RS {
+                                       AC: ActionHandlerCombine, A: Action, M: Middleware> where R.A == A, AC.A == A,  R.S == RS, R.S == AC.S, M.A == A, M.S == RS {
     var reducer: R
     var actionCreator: AC
     var middleWare: M
@@ -33,7 +33,7 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
     /// Store initializer and that is supposed to happen just once during the lifecycle of this store
     /// - Parameters:
     ///   - state: State type
-    ///   - actionC: ActionCreator concrete implemetation
+    ///   - actionC: ActionHandler concrete implemetation
     ///   - reducer: Reducer concrete implementation
     ///   - middleWare: Middlerware concrete implementation
     public init(_ state: RS, _ actionC: AC, reducer: R, middleWare: M) {
@@ -53,8 +53,8 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
             }.store(in: &cacellableTasks)
     }
 
-    ///  All the dispatchedActions from ActionCreator are supposed to come from the main thread
-    ///  and this is done to avoid queue hopping. We have tried to add storequeue but in case of sync and asycn function
+    ///  All the dispatchedActions from ActionHandler are supposed to come from the main thread
+    ///  and this is done to avoid queue hopping. I have tried to add storequeue but in case of sync and asycn function
     ///  calls behavior causes various issues on UI. For instance, if action creator returns an empty observable
     ///  then call returns to this function on the main queue and if store is using a separate dedicated queue
     ///  to do things in onNext and onComplete then it will cause thread queue hopping which will create patchy UX.
@@ -87,8 +87,8 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
 
             logEvents("popped action is \(unwrappedNextAction)")
 
-            // In case of successful events onNext will be called so we need
-            // to call next action from the reducer and for that we need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
+            // In case of successful events onNext will be called so I need
+            // to call next action from the reducer and for that I need to store nextAction in the store to use that in onComplete. Since onComplete is called for `.empty()` as well as `onNext`. Currently, I can not think of a better way to clear this up but there should be more elegant way for this.
             dispatchAction(unwrappedNextAction)
         }
     }

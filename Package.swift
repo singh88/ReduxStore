@@ -13,12 +13,17 @@ let package = Package(
             targets: ["ReduxStore"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/ReactiveX/RxSwift.git", from: "6.0.0"),
+        .package(url: "https://github.com/ReactiveX/RxSwift.git", from: "6.5.0"),
         .package(url: "https://github.com/RxSwiftCommunity/RxDataSources.git", from: "5.0.0")
     ],
     targets: [
         .target(
             name: "ReduxStore",
-            dependencies: ["RxSwift", .product(name: "RxCocoa", package: "RxSwift"), "RxDataSources"])
+            dependencies: ["RxSwift",
+                .product(name: "RxCocoa",
+                         package: "RxSwift"),
+                           "RxDataSources"]),
+        .testTarget(name: "ReduxStoreTests",
+                    dependencies: ["ReduxStore"])
     ]
 )

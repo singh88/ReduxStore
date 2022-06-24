@@ -10,6 +10,6 @@ import XCTest
 class StoreTests: XCTestCase {
 
     func test() {
-        print("Hi")
+        print("Test")
     }
 }
