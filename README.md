@@ -1,6 +1,6 @@
 # ReduxSwift
 
-This repo implements Redux architecture in Swift to enable RxSwift and Combine based applications to leverage unidirectional data flow. 
+This repo implements Redux architecture in Swift to enable RxSwift and Combine based applications to leverage unidirectional data flow.
 
 ### Why
 Redux talks about a single source of truth for state managment to avoid to many floating variable and boolean flags in various view model and view controllers. 
@@ -35,8 +35,4 @@ Reducer is responsible for updating the state and generating any side effects af
 
 #### SideEffects
 SideEffects are similar to action but as the name suggessts its an effect or outcome of some action that happens for various reason ( user action, async calls etc. ).
-
-
-
-
 
