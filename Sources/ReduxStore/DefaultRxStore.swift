@@ -12,7 +12,7 @@ import RxCocoa
 // References: https://github.com/pointfreeco/swift-composable-architecture
 
 public final class DefaultRxStore<R: Reducer, RS: ReduxState,
-                   AC: ActionCreator, A: Action, M: Middleware> where R.A == A,
+                   AC: ActionHandler, A: Action, M: Middleware> where R.A == A,
                                                                         AC.A == A,
                                                                         R.S == RS,
                                                                         R.S == AC.S,
@@ -55,8 +55,8 @@ public final class DefaultRxStore<R: Reducer, RS: ReduxState,
         return _state.value
     }
 
-    ///  All the dispatchedActions from ActionCreator are supposed to come from the main thread
-    ///  and this is done to avoid queue hopping. We have tried to add storequeue but in case of sync and asycn function
+    ///  All the dispatchedActions from ActionHandler are supposed to come from the main thread
+    ///  and this is done to avoid queue hopping. I have tried to add storequeue but in case of sync and asycn function
     ///  calls behavior causes various issues on UI. For instance, if action creator returns an empty observable
     ///  then call returns to this function on the main queue and if store is using a separate dedicated queue
     ///  to do things in onNext and onComplete then it will cause thread queue hopping which will create patchy UX.

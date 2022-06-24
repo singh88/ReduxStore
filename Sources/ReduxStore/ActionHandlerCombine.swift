@@ -1,14 +1,14 @@
 //
-//  ActionCreatorCombine.swift
+//  ActionHandlerCombine.swift
 //  ReduxStore
 //
 //  Created by Manish Singh on 10/24/21.
 //
 import Combine
 
-/// Action Creator Protocol for Combine
+/// A type that handles action and its underlying calls.
 @available(iOS 13.0, *)
-public protocol ActionCreatorCombine {
+public protocol ActionHandlerCombine {
     associatedtype A
     associatedtype S
     @available(macOS 10.15, *)
