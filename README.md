@@ -1,6 +1,6 @@
 # ReduxSwift
 
-https://manishsingh-85983.medium.com/redux-swift-part-1-183262257d0d
+[Medium Blog](https://manishsingh-85983.medium.com/redux-swift-part-1-183262257d0d)
 
 This repo implements Redux architecture in Swift to enable RxSwift and Combine based applications to leverage unidirectional data flow.
 
