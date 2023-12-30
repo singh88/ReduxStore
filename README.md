@@ -32,9 +32,9 @@ ActionHandler encapsulates the implemenation details for `Action` type. `ActionH
 
 
 #### Reducer
-Reducer is responsible for updating the state and generating any side effects after the state mutation. Reducer is accessible through store and it is only responsbile for driving it. Store then takes care of notifying the listerners of state and side effect mutation. SideEffects in case of a feature or app development could be anything that can drive a change in the experience.
+The Reducer plays a pivotal role in updating the state and triggering any side effects following a state mutation. It is accessible via the store and exclusively manages the state's evolution. The store, in turn, handles the task of informing listeners about state changes and side effect alterations. Side effects, in the context of feature or app development, encompass anything capable of influencing a shift in the overall user experience.
 
 
 #### SideEffects
-SideEffects are similar to action but as the name suggessts its an effect or outcome of some action that happens for various reason ( user action, async calls etc. ).
+Side effects, as the name implies, are outcomes or effects resulting from various actions. These effects can be triggered by different factors such as user interactions, asynchronous calls, or other events. Unlike a simple action, which typically represents an intent or change in the application state, a side effect refers to the broader consequences or results that occur due to an action, often extending beyond the immediate state change.
 
