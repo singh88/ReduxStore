@@ -95,7 +95,7 @@ public final class DefaultCombineStore<R: Reducer, RS: ReduxState,
 
     func printAllNextEvents() {
         _nextAction.forEach {
-            self?.logEvents("currently \($0) is in queue")
+            self.logEvents("currently \($0) is in queue")
         }
     }
 
